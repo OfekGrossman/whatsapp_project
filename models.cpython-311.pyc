@@ -1,0 +1,156 @@
+"""
+Views for the messaging application.
+
+This module contains view functions for handling user registration, authentication,
+and message management functionality. It includes support for conversation threading,
+message replies, and AJAX-based message loading.
+
+Functions:
+    register: Handle user registration
+    login_view: Process user login with Django authentication form
+    user_login: Alternative login handler with custom form
+    user_logout: Handle user logout
+    messages_view: Display user's messages grouped by conversation
+    new_message: Handle creation of new messages and replies
+    get_conversation_messages: Get messages for a specific conversation with AJAX support
+"""
+
+from django.shortcuts import render, redirect
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
+from .forms import RegistrationForm, MessageForm
+from .models import User, Message
+from django.contrib.auth.forms import AuthenticationForm
+from django.utils import timezone
+from datetime import timedelta
+from django.http import JsonResponse
+from django.db.models import Q
+
+def register(request):
+    if request.method == 'POST':
+        form = RegistrationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('login')
+    else:
+        form = RegistrationForm()
+    return render(request, 'messaging/registration.html', {'form': form})
+
+def login_view(request):
+    form = AuthenticationForm(request, data=request.POST or None)
+    if request.method == 'POST':
+        if form.is_valid():
+            username = form.cleaned_data.get('username')
+            password = form.cleaned_data.get('password')
+            user = authenticate(username=username, password=password)
+            if user is not None:
+                login(request, user)
+                return redirect('messages')
+    return render(request, 'messaging/login.html', {'form': form})
+
+def user_login(request):
+    if request.method == 'POST':
+        username = request.POST['username']
+        password = request.POST['password']
+        user = authenticate(request, username=username, password=password)
+        if user:
+            login(request, user)
+            return redirect('messages')
+        else:
+            return render(request, 'messaging/login.html', {'error': 'Invalid username or password'})
+    return render(request, 'messaging/login.html')
+
+def user_logout(request):
+    logout(request)
+    return redirect('login')
+
+@login_required
+def messages_view(request):
+    """Display user's messages grouped by conversations"""
+    # Get all messages where user is either sender or recipient
+    messages = Message.objects.filter(
+        Q(recipient=request.user) | Q(sender=request.user)
+    ).order_by('-timestamp')
+
+    # Group messages by conversation
+    conversations = {}
+    for message in messages:
+        other_user = message.sender if message.sender != request.user else message.recipient
+        if other_user.id not in conversations:
+            conversations[other_user.id] = {
+                'user': other_user,
+                'messages': []
+            }
+        conversations[other_user.id]['messages'].append(message)
+
+    return render(request, 'messaging/messages.html', {
+        'conversations': conversations.values()
+    })
+
+def get_default_timestamp():
+    return timezone.now() + timedelta(hours=2)
+
+@login_required
+def new_message(request):
+    """Handle new messages and replies"""
+    initial_data = {}
+    if 'reply_to' in request.GET:
+        try:
+            recipient = User.objects.get(id=request.GET['reply_to'])
+            initial_data['recipient'] = recipient
+        except User.DoesNotExist:
+            pass
+
+    if request.method == 'POST':
+        form = MessageForm(request.POST)
+        if form.is_valid():
+            message = form.save(commit=False)
+            message.sender = request.user
+            message.timestamp = get_default_timestamp()
+            message.save()
+
+            # If it's a reply from the chat window
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'status': 'success',
+                    'message_id': message.id,
+                    'timestamp': message.timestamp.strftime('%Y-%m-%d %H:%M')
+                })
+
+            return redirect('messages')
+    else:
+        form = MessageForm(initial=initial_data)
+
+    return render(request, 'messaging/new_message.html', {'form': form})
+
+@login_required
+def get_conversation_messages(request, user_id):
+    """Get all messages between current user and specified user"""
+    try:
+        other_user = User.objects.get(id=user_id)
+        messages = Message.objects.filter(
+            (Q(sender=request.user) & Q(recipient=other_user)) |
+            (Q(recipient=request.user) & Q(sender=other_user))
+        ).order_by('timestamp')
+
+        messages_data = [{
+            'id': msg.id,
+            'content': msg.content,
+            'sender': msg.sender.get_full_name() or msg.sender.username,
+            'timestamp': msg.timestamp.strftime('%Y-%m-%d %H:%M'),
+            'is_sender': msg.sender == request.user
+        } for msg in messages]
+
+        return JsonResponse({
+            'status': 'success',
+            'messages': messages_data,
+            'other_user': {
+                'id': other_user.id,
+                'name': other_user.get_full_name() or other_user.username
+            }
+        })
+    except User.DoesNotExist:
+        return JsonResponse({
+            'status': 'error',
+            'message': 'User not found'
+        }, status=404)

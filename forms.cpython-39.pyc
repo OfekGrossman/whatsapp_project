@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Web - Register</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'styles.css' %}">
+</head>
+<body>
+    <div class="app-container">
+        <div class="login-card" style="height: auto; overflow: auto;">
+            <h2>Create Account</h2>
+
+            {% if form.errors %}
+                {% for field, errors in form.errors.items %}
+                    {% for error in errors %}
+                        <div class="error-message">
+                            {{ error }}
+                        </div>
+                    {% endfor %}
+                {% endfor %}
+            {% endif %}
+
+            <form method="post" style="margin-bottom: 24px;" id="registrationForm">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="id_username">Username</label>
+                    {{ form.username }}
+                </div>
+                <div class="form-group">
+                    <label for="id_first_name">First name</label>
+                    {{ form.first_name }}
+                </div>
+                <div class="form-group">
+                    <label for="id_last_name">Last name</label>
+                    {{ form.last_name }}
+                </div>
+                <div class="form-group">
+                    <label for="id_password1">Password</label>
+                    {{ form.password1 }}
+                </div>
+                <div class="form-group">
+                    <label for="id_password2">Confirm password</label>
+                    {{ form.password2 }}
+                </div>
+                <div class="button-group" style="display: flex; gap: 10px; justify-content: center;">
+                    <button type="submit" style="flex: 1;">Create account</button>
+                    <button type="button" onclick="clearForm()" style="flex: 1; background-color: #6c757d;">Clear</button>
+                </div>
+            </form>
+
+            <div class="login-link" style="margin-top: 0;">
+                Already have an account? <a href="{% url 'login' %}">Log in</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function clearForm() {
+            document.getElementById('registrationForm').reset();
+            // Clear any error messages that might be displayed
+            const errorMessages = document.getElementsByClassName('error-message');
+            while(errorMessages.length > 0) {
+                errorMessages[0].remove();
+            }
+        }
+    </script>
+</body>
+</html>

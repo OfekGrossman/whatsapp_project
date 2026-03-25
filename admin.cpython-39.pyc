@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Manage Group - WhatsApp Web</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'styles.css' %}">
+    <style>
+        .group-info {
+            background-color: var(--message-bg);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .group-info h3 {
+            margin: 0 0 10px 0;
+            color: var(--text-primary);
+        }
+        .group-info p {
+            margin: 0;
+            color: var(--text-secondary);
+        }
+        .member-list {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .member-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            border-bottom: 1px solid var(--border-light);
+            background-color: var(--message-bg);
+        }
+        .member-item:last-child {
+            border-bottom: none;
+        }
+        .member-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .admin-badge {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .action-buttons button {
+            padding: 8px 16px;
+            font-size: 0.9em;
+            transition: all 0.2s ease;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+        }
+        .action-buttons button:hover {
+            opacity: 0.9;
+        }
+        .action-buttons .btn-secondary {
+            background-color: var(--secondary-color);
+            color: var(--text-primary);
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            margin-left: 8px;
+        }
+        .status-active {
+            background-color: #28a745;
+            color: white;
+        }
+        .status-disbanded {
+            background-color: #dc3545;
+            color: white;
+        }
+        .message-container {
+            margin-bottom: 20px;
+        }
+        .alert {
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="center-container">
+        <div class="login-card" style="max-width: 800px;">
+            <h2>Manage Group</h2>
+
+            {% if messages %}
+                <div class="message-container">
+                    {% for message in messages %}
+                        <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <div class="group-info">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <h3>{{ group.name }}</h3>
+                    <span class="status-badge status-{{ group.status }}">
+                        {{ group.status|title }}
+                    </span>
+                </div>
+                <p>{{ group.description }}</p>
+                <p>Created on: {{ group.created_at|date:"F j, Y" }}</p>
+            </div>
+
+            <form id="groupActionForm" method="post" action="{% url 'handle_group_action' group.id %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" id="actionType">
+
+                <div class="member-list">
+                    {% for member in members %}
+                        <div class="member-item">
+                            <div class="member-info">
+                                {% if is_admin and group.status == 'active' %}
+                                    <input
+                                        type="checkbox"
+                                        name="users"
+                                        value="{{ member.user.id }}"
+                                        {% if member.user == request.user %}
+                                            disabled
+                                        {% else %}
+                                            checked
+                                        {% endif %}
+                                    >
+                                {% endif %}
+                                <span>{{ member.user.get_full_name|default:member.user.username }}</span>
+                                {% if member.role == 'admin' %}
+                                    <span class="admin-badge">Admin</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div class="action-buttons">
+                    {% if is_admin and group.status == 'active' %}
+                        <button type="button" onclick="submitAction('remove_members')" class="btn-secondary">
+                            Remove Selected Members
+                        </button>
+                        <button type="button" onclick="submitAction('set_admin')" class="btn-secondary">
+                            Make Admin
+                        </button>
+                        <button type="button" onclick="submitAction('remove_admin')" class="btn-secondary">
+                            Remove Admin
+                        </button>
+                        <button type="button" onclick="window.location.href='{% url 'add_members' group.id %}'" class="btn-secondary">
+                            Add Members
+                        </button>
+                        <button type="button" onclick="confirmToggleStatus()" class="btn-secondary" style="background-color: #dc3545;">
+                            Disable Group
+                        </button>
+                    {% endif %}
+                    {% if group.status == 'active' %}
+                        <button type="button" onclick="confirmLeave()" class="btn-secondary">
+                            Leave Group
+                        </button>
+                    {% endif %}
+                    <a href="{% url 'messages' %}" class="btn btn-secondary" style="text-align: center; padding: 12px;">
+                        Back to Messages
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function submitAction(action) {
+            const selectedUsers = document.querySelectorAll('input[name="users"]:checked').length;
+            if ((action === 'remove_members' || action === 'set_admin' || action === 'remove_admin') && selectedUsers === 0) {
+                alert('Please select at least one member');
+                return;
+            }
+
+            const confirmMessages = {
+                'remove_members': 'Are you sure you want to remove the selected members?',
+                'set_admin': 'Are you sure you want to make the selected members group admins?',
+                'remove_admin': 'Are you sure you want to remove admin privileges from the selected members?'
+            };
+
+            if (confirmMessages[action] && !confirm(confirmMessages[action])) {
+                return;
+            }
+
+            document.getElementById('actionType').value = action;
+            document.getElementById('groupActionForm').submit();
+        }
+
+        function confirmLeave() {
+            const isLastAdmin = {{ is_last_admin|yesno:"true,false" }};
+            const message = isLastAdmin
+                ? "Warning: As the last admin, leaving will disband the group. Continue?"
+                : "Are you sure you want to leave the group?";
+
+            if (confirm(message)) {
+                document.getElementById('actionType').value = 'leave';
+                document.getElementById('groupActionForm').submit();
+            }
+        }
+
+        function confirmToggleStatus() {
+            if (confirm('Are you sure you want to disable this group? Members won\'t be able to send messages while disabled.')) {
+                document.getElementById('actionType').value = 'toggle_status';
+                document.getElementById('groupActionForm').submit();
+            }
+        }
+    </script>
+</body>
+</html>

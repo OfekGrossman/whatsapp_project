@@ -1,0 +1,345 @@
+/* WhatsApp Web-inspired styling */
+:root {
+    --primary-color: #00a884;
+    --secondary-color: #f0f2f5;
+    --text-primary: #111b21;
+    --text-secondary: #667781;
+    --border-light: #e9edef;
+    --message-bg: #ffffff;
+    --sidebar-bg: #ffffff;
+    --hover-bg: #f0f2f5;
+    --chat-bg: #efeae2;
+    --message-out: #d9fdd3;
+    --message-in: #ffffff;
+}
+
+/* Base Styles */
+body {
+    font-family: Segoe UI, Helvetica Neue, Helvetica, Lucida Grande, Arial, Ubuntu, Cantarell, Fira Sans, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: var(--secondary-color);
+    height: 100vh;
+    color: var(--text-primary);
+}
+
+/* App Container */
+.app-container {
+    display: flex;
+    height: 100vh;
+    background-color: var(--secondary-color);
+}
+
+/* Login and Register Card Styles */
+.login-card {
+    background-color: var(--message-bg);
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+    padding: 32px;
+    width: 100%;
+    max-width: 400px;
+    margin: 32px auto;
+}
+
+.login-card h2 {
+    color: var(--primary-color);
+    text-align: center;
+    margin-bottom: 24px;
+    font-size: 1.5em;
+    font-weight: 500;
+}
+
+/* Form Styles */
+form {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--text-primary);
+    font-size: 0.9em;
+}
+
+form input,
+form select,
+form textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    font-size: 0.95em;
+    background-color: var(--message-bg);
+    transition: border-color 0.2s;
+    box-sizing: border-box;
+}
+
+form input:focus,
+form select:focus,
+form textarea:focus {
+    border-color: var(--primary-color);
+    outline: none;
+}
+
+form button {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 24px;
+    padding: 12px 24px;
+    font-size: 0.95em;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    width: 100%;
+}
+
+form button:hover {
+    opacity: 0.9;
+}
+
+/* [Keep all your existing styles for messages, sidebar, etc. here] */
+
+/* Error Message */
+.error-message {
+    background-color: #fff5f5;
+    color: #dc3545;
+    border: 1px solid #ffa7a7;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 16px;
+    font-size: 0.9em;
+    text-align: center;
+}
+
+/* Link Styling */
+a {
+    color: var(--primary-color);
+    text-decoration: none;
+    transition: text-decoration 0.2s;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* Center container for login/register pages */
+.center-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .login-card {
+        margin: 16px;
+        padding: 24px;
+    }
+}
+
+/* Main Content Updates - Chat Background */
+.main-content {
+    margin-left: 30%;
+    width: 70%;
+    background-color: var(--message-bg); /* Changed to white */
+    background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M50 50l-25-25L0 50l25 25zm0 0l25 25 25-25-25-25z' fill='%23ffffff' fill-opacity='0.1'/%3E%3C/svg%3E");
+    padding: 20px;
+    box-sizing: border-box;
+    height: 100vh;
+    overflow-y: auto;
+}
+
+/* Message List Updates */
+.message-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 16px;
+    max-width: 900px;
+    margin: 0 auto;
+    list-style: none;
+}
+
+.message-item {
+    background-color: var(--secondary-color); /* Changed to light gray background */
+    max-width: 65%;
+    padding: 8px 12px;
+    border-radius: 7.5px;
+    position: relative;
+    box-shadow: 0 1px 0.5px rgba(11, 20, 26, 0.13);
+    margin-bottom: 12px;
+}
+
+.message-item.sent {
+    background-color: var(--message-out);
+    margin-left: auto;
+    border-top-right-radius: 0;
+}
+
+.message-item.received {
+    background-color: var(--message-in);
+    margin-right: auto;
+    border-top-left-radius: 0;
+}
+
+.message-header {
+    color: var(--primary-color);
+    font-weight: 500;
+    font-size: 0.9em;
+    margin-bottom: 2px;
+}
+
+.message-content {
+    color: var(--text-primary);
+    line-height: 1.4;
+    white-space: pre-wrap;
+    font-size: 0.9375rem;
+}
+
+.message-timestamp {
+    color: var(--text-secondary);
+    font-size: 0.6875rem;
+    text-align: right;
+    margin-top: 4px;
+    float: right;
+    margin-left: 8px;
+    margin-bottom: -5px;
+}
+
+/* New Message Compose Area */
+.message-compose {
+    background-color: var(--secondary-color);   /* Changed from var(--message-bg) to var(--secondary-color) */
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+    max-width: 900px;
+    margin: 20px auto;
+    padding: 20px;
+}
+
+.message-compose form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.message-compose .form-group {
+    margin-bottom: 0;
+}
+
+.message-compose select,
+.message-compose textarea {
+    background-color: var(--message-bg);
+    border: 1px solid var(--border-light);
+    padding: 12px;
+    border-radius: 8px;
+    resize: none;
+}
+
+.message-compose textarea {
+    min-height: 100px;
+}
+
+.message-compose button {
+    align-self: flex-end;
+    width: auto;
+    min-width: 120px;
+    background-color: var(--primary-color);
+    padding: 10px 24px;
+}
+
+/* Chat Header */
+.chat-header {
+    background-color: var(--message-bg);
+    padding: 16px;
+    border-bottom: 1px solid var(--border-light);
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.chat-header h2 {
+    margin: 0;
+    font-size: 1.1em;
+    font-weight: 500;
+}
+
+/* Chat Input Area */
+.chat-input-area {
+    position: sticky;
+    bottom: 0;
+    background-color: var(--message-bg);
+    padding: 16px;
+    border-top: 1px solid var(--border-light);
+    margin: 0 -20px;
+}
+
+.chat-input-container {
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.chat-input-container textarea {
+    flex-grow: 1;
+    min-height: 45px;
+    max-height: 100px;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border-light);
+    resize: none;
+    font-family: inherit;
+}
+
+.chat-input-container button {
+    width: auto;
+    padding: 12px 24px;
+}
+
+/* Sidebar Chat List */
+.chat-list-item {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-light);
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.chat-list-item:hover {
+    background-color: var(--hover-bg);
+}
+
+.chat-list-item .name {
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+
+.chat-list-item .preview {
+    color: var(--text-secondary);
+    font-size: 0.875em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+/* Update the sidebar-header style */
+.sidebar-header {
+    background-color: var(--secondary-color);
+    padding: 16px;
+    border-bottom: 1px solid var(--border-light);
+    white-space: nowrap; /* Prevents text from wrapping */
+    display: inline-block; /* Keeps text in one line */
+}
+

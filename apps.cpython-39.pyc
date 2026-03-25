@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>WhatsApp Web - New Message</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'styles.css' %}">
+    <style>
+        .char-counter {
+            font-size: 0.8em;
+            color: #666;
+            text-align: right;
+            margin-top: 4px;
+        }
+        .char-counter.limit-reached {
+            color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar with fixed navigation positions -->
+        <aside class="sidebar" style="width: 15%; min-width: 200px; display: flex; flex-direction: column; height: 100%;">
+            <div class="sidebar-header" style="padding: 8px;">
+                <h2 style="font-size: 1em; margin: 0;">New Chat</h2>
+            </div>
+            <!-- Top navigation -->
+            <div style="padding: 4px;">
+                <a href="{% url 'messages' %}" class="nav-link" style="padding: 6px; font-size: 0.85em;">
+                    <span style="display: flex; align-items: center;">
+                        <svg style="margin-right: 6px; width: 16px; height: 16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                        All Chats
+                    </span>
+                </a>
+            </div>
+
+            <!-- Spacer to push logout to bottom -->
+            <div style="flex-grow: 1;"></div>
+
+            <!-- Bottom navigation (Logout) -->
+            <div style="padding: 4px; border-top: 1px solid var(--border-light);">
+                <a href="{% url 'logout' %}" class="nav-link" style="padding: 6px; color: #dc3545; font-size: 0.85em;">
+                    <span style="display: flex; align-items: center;">
+                        <svg style="margin-right: 6px; width: 16px; height: 16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                        Logout
+                    </span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content" style="margin-left: 15%; width: 85%;">
+            <div class="chat-header">
+                <h2>New Message</h2>
+            </div>
+
+            <div class="message-compose">
+                {% if form.recipient.errors %}
+                    <div class="error-message">
+                        Please select a recipient before sending the message.
+                    </div>
+                {% endif %}
+
+                <form method="post" id="messageForm">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="id_recipient">To:</label>
+                        <select name="recipient" id="id_recipient" required>
+                            <option value="" disabled selected>Select contact</option>
+                            {% for user in form.fields.recipient.queryset %}
+                                <option value="{{ user.id }}">{{ user.username }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="id_content">Message:</label>
+                        <textarea name="content"
+                                id="id_content"
+                                required
+                                maxlength="1024"
+                                placeholder="Type a message"
+                                onkeyup="updateCharCount(this)"></textarea>
+                        <div id="charCounter" class="char-counter">0/1024 characters</div>
+                    </div>
+                    <div class="button-group" style="display: flex; gap: 10px; margin-top: 15px;">
+                        <button type="submit" style="flex: 1;">
+                            <span style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                                Send
+                            </span>
+                        </button>
+                        <button type="button" onclick="clearForm()" style="flex: 1; background-color: #6c757d;">
+                            Clear
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        function updateCharCount(textarea) {
+            const maxLength = 1024;
+            const currentLength = textarea.value.length;
+            const counter = document.getElementById('charCounter');
+            counter.textContent = `${currentLength}/${maxLength} characters`;
+
+            // Add visual feedback when approaching/reaching limit
+            if (currentLength >= maxLength) {
+                counter.classList.add('limit-reached');
+            } else {
+                counter.classList.remove('limit-reached');
+            }
+        }
+
+        function clearForm() {
+            document.getElementById('messageForm').reset();
+            document.getElementById('charCounter').textContent = '0/1024 characters';
+            document.getElementById('charCounter').classList.remove('limit-reached');
+        }
+
+        // Initialize character counter
+        document.addEventListener('DOMContentLoaded', function() {
+            updateCharCount(document.getElementById('id_content'));
+        });
+    </script>
+</body>
+</html>

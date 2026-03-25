@@ -1,0 +1,30 @@
+"""
+URL Configuration for the messaging application.
+
+This module defines the URL patterns for routing requests to appropriate views.
+It includes paths for user authentication, message management, and admin interface.
+New endpoints support conversation viewing and message threading.
+
+URL Patterns:
+    - /admin/: Django admin interface
+    - /register/: User registration
+    - /login/: User login
+    - /logout/: User logout
+    - /messages/: Message list view with conversation support
+    - /new-message/: New message creation with reply functionality
+    - /conversation/<int:user_id>/: AJAX endpoint for conversation messages
+"""
+
+from django.contrib import admin
+from django.urls import path
+from messaging import views
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('register/', views.register, name='register'),
+    path('login/', views.user_login, name='login'),
+    path('logout/', views.user_logout, name='logout'),
+    path('messages/', views.messages_view, name='messages'),
+    path('new-message/', views.new_message, name='new_message'),
+    path('conversation/<int:user_id>/', views.get_conversation_messages, name='get_conversation'),
+]
